@@ -1,7 +1,6 @@
 import {Injectable} from "@nestjs/common";
 import * as fs from "fs";
 import {join} from "path";
-// import * as XLSX from "xlsx";
 import * as XLSX from 'xlsx-js-style'
 
 @Injectable()
@@ -22,7 +21,7 @@ export class XlsService {
                 'Work date': workDate,
                 'Work Description': workDescription,
                 'Hours': hours,
-                'Full name': fullName
+                'Full name': fullName,
             } = obj;
             return {
                 'Issue Key': issueKey, 'Work date': workDate,

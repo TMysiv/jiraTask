@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
-import { XlsModule } from './xls/xls.module';
+import { UploadModule } from './upload/upload.module';
 import {CronService} from "./services/cron.service";
 
 @Module({
-  imports: [XlsModule],
+  imports: [UploadModule],
   controllers: [],
   providers: [CronService],
 })
