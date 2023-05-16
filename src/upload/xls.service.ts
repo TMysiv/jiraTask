@@ -2,11 +2,15 @@ import {Injectable} from "@nestjs/common";
 import * as fs from "fs";
 import {join} from "path";
 import * as XLSX from 'xlsx-js-style'
+import {PdfService} from "./pdf.service";
 
 @Injectable()
 export class XlsService {
 
-    async parseFile(data: Buffer) {
+    constructor(private pdfService: PdfService) {
+    }
+
+    async parseFile(data: Buffer, extension: string) {
         const workbook = XLSX.read(data, {type: "buffer"});
         const sheetName = workbook.SheetNames[0];
         const users = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
@@ -15,7 +19,7 @@ export class XlsService {
             const millisecondsPerDay = 24 * 60 * 60 * 1000;
             const unixTime = (obj['Work date'] - 25569) * millisecondsPerDay;
             obj['Work date'] = new Date(unixTime).toLocaleString().slice(0, -12)
-                .replace(',', '').replace(/\//g, '.')
+                .replace(',', '').replace(/\//g, '.');
             const {
                 'Issue Key': issueKey,
                 'Work date': workDate,
@@ -37,7 +41,12 @@ export class XlsService {
             return acc;
         }, {}));
 
-        return this.generateFile(dividedUsers)
+        if (extension === 'xls') {
+            return this.generateFile(dividedUsers)
+        } else {
+            return this.pdfService.generateFile(dividedUsers)
+        }
+
     }
 
     async generateFile(data) {
@@ -54,7 +63,7 @@ export class XlsService {
         const fileName = new Date().getTime();
 
         XLSX.writeFile(workbook, `files/${fileName}.xlsx`);
-        return fs.createReadStream(join(process.cwd(),'files', `${fileName}.xlsx`));
+        return fs.createReadStream(join(process.cwd(), 'files', `${fileName}.xlsx`));
     }
 
     async addStyles(worksheet, sum) {
@@ -64,13 +73,14 @@ export class XlsService {
             for (let colIndex = range.s.c; colIndex <= range.e.c; colIndex++) {
                 const cellAddress = XLSX.utils.encode_cell({r: rowIndex, c: colIndex});
                 const cell = worksheet[cellAddress];
-                cell.s = await this.customStyle(12,false)
+                cell.s = await this.customStyle(12, false)
             }
+
         }
 
         const header = ['A1', 'B1', 'C1', 'D1'];
         for (let j = 0; j < header.length; j++) {
-            worksheet[header[j]].s = await this.customStyle(14,true)
+            worksheet[header[j]].s = await this.customStyle(14, true)
         }
 
         worksheet['!cols'] = [{wch: 12}, {wch: 13}, {wch: 40}, {wch: 10}, {hidden: true}];
@@ -79,7 +89,7 @@ export class XlsService {
         return XLSX.utils.sheet_add_aoa(worksheet, [[sum]], {origin: sumCell});
     }
 
-    async customStyle(size,bold) {
+    async customStyle(size, bold) {
         return {
             font: {
                 size,
