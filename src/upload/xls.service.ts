@@ -56,9 +56,8 @@ export class XlsService {
         for (let i = 0; i < data.length; i++) {
             const sum = data[i].reduce((acc, {Hours}) => acc + Hours, 0);
             const worksheet = XLSX.utils.json_to_sheet(data[i]);
-
             const styledWorkSheet = await this.addStyles(worksheet, sum);
-            XLSX.utils.book_append_sheet(workbook, styledWorkSheet, `${data[i][0]['Full name'].replace(/[\[\] ]/g, '')}`);
+            XLSX.utils.book_append_sheet(workbook, styledWorkSheet, `${data[i][0]['Full name'].replace(/[\[\]]/g, '')}`);
         }
         const fileName = new Date().getTime();
 
@@ -96,14 +95,10 @@ export class XlsService {
                 bold
             },
             alignment: {
-                horizontal: 'center'
+                horizontal: 'center',
+                vertical: 'center',
+                wrapText: true
             },
-            border: {
-                top: {style: 'thin', color: {rgb: "000000"}},
-                bottom: {style: 'thin', color: {rgb: "000000"}},
-                left: {style: 'thin', color: {rgb: "000000"}},
-                right: {style: 'thin', color: {rgb: "000000"}}
-            }
         }
     }
 }

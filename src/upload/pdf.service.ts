@@ -10,7 +10,6 @@ export class PdfService {
         const doc = new PDFDocument({autoFirstPage: false,bufferPages: true});
         const fileName = new Date().getTime();
         const outputPath = `files/${fileName}.pdf`;
-        doc.pipe(fs.createWriteStream(outputPath));
 
         const headers = Object.keys(data[0][0]);
         const range = doc.bufferedPageRange()
@@ -56,6 +55,7 @@ export class PdfService {
             doc.font('Helvetica-Bold').fontSize(12).text(`Total ${sum}`,{underline: true, lineGap: 20})
 
         }
+        doc.pipe(fs.createWriteStream(outputPath));
         doc.end();
         return fs.createReadStream(join(process.cwd(), 'files', `${fileName}.pdf`));
     }

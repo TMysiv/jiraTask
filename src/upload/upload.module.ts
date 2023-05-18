@@ -5,6 +5,6 @@ import {PdfService} from "./pdf.service";
 
 @Module({
   providers: [XlsService, PdfService],
-  controllers: [UploadController]
+  controllers: [UploadController],
 })
 export class UploadModule {}
