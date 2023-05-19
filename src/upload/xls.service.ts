@@ -46,11 +46,9 @@ export class XlsService {
         } else {
             return this.pdfService.generateFile(dividedUsers)
         }
-
     }
 
     async generateFile(data) {
-
         const workbook = XLSX.utils.book_new();
 
         for (let i = 0; i < data.length; i++) {
@@ -65,13 +63,11 @@ export class XlsService {
             XLSX.utils.book_append_sheet(workbook, styledWorkSheet, fullName);
         }
         const fileName = new Date().getTime();
-
         XLSX.writeFile(workbook, `files/${fileName}.xlsx`);
         return fs.createReadStream(join(process.cwd(), 'files', `${fileName}.xlsx`));
     }
 
     async addStyles(worksheet, sum, fullName, project) {
-
         const range = XLSX.utils.decode_range(worksheet['!ref']);
         for (let rowIndex = range.s.r + 3; rowIndex <= range.e.r; rowIndex++) {
             for (let colIndex = range.s.c; colIndex <= range.e.c; colIndex++) {
@@ -128,7 +124,6 @@ export class XlsService {
                 border: {bottom: true}
             }
         }
-
         return worksheet;
     }
 }
