@@ -16,20 +16,20 @@ export class XlsService {
         const users = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
 
         const filterUsersFields = users.map((obj: any) => {
-            const millisecondsPerDay = 24 * 60 * 60 * 1000;
-            const unixTime = (obj['Work date'] - 25569) * millisecondsPerDay;
-            obj['Work date'] = new Date(unixTime).toLocaleString().slice(0, -12)
-                .replace(',', '').replace(/\//g, '.');
             const {
-                'Issue Key': issueKey,
                 'Work date': workDate,
                 'Work Description': workDescription,
                 'Hours': hours,
                 'Full name': fullName,
+                'Activity Name': customer
             } = obj;
+            const millisecondsPerDay = 24 * 60 * 60 * 1000;
+            const unixTime = (obj['Work date'] - 25569) * millisecondsPerDay;
+            obj['Work date'] = new Date(unixTime).toLocaleString().slice(0, -12)
+                .replace(',', '').replace(/\//g, '.');
             return {
-                'Issue Key': issueKey, 'Work date': workDate,
-                'Work Description': workDescription, 'Hours': hours, 'Full name': fullName
+                'Work date': workDate,
+                'Work Description': workDescription, 'Hours': hours, 'Full name': fullName, 'Activity Name': customer
             };
         });
 
@@ -55,9 +55,14 @@ export class XlsService {
 
         for (let i = 0; i < data.length; i++) {
             const sum = data[i].reduce((acc, {Hours}) => acc + Hours, 0);
-            const worksheet = XLSX.utils.json_to_sheet(data[i]);
-            const styledWorkSheet = await this.addStyles(worksheet, sum);
-            XLSX.utils.book_append_sheet(workbook, styledWorkSheet, `${data[i][0]['Full name'].replace(/[\[\]]/g, '')}`);
+            // @ts-ignore
+            const worksheet = XLSX.utils.json_to_sheet(data[i], {origin: 'B3'});
+
+            const fullName = data[i][0]['Full name'].replace(/\[X\]/g, '');
+            const project = data[i][0]['Activity Name'];
+            const styledWorkSheet = await this.addStyles(worksheet, sum, fullName, project);
+
+            XLSX.utils.book_append_sheet(workbook, styledWorkSheet, fullName);
         }
         const fileName = new Date().getTime();
 
@@ -65,40 +70,65 @@ export class XlsService {
         return fs.createReadStream(join(process.cwd(), 'files', `${fileName}.xlsx`));
     }
 
-    async addStyles(worksheet, sum) {
+    async addStyles(worksheet, sum, fullName, project) {
 
         const range = XLSX.utils.decode_range(worksheet['!ref']);
-        for (let rowIndex = range.s.r + 1; rowIndex <= range.e.r; rowIndex++) {
+        for (let rowIndex = range.s.r + 3; rowIndex <= range.e.r; rowIndex++) {
             for (let colIndex = range.s.c; colIndex <= range.e.c; colIndex++) {
                 const cellAddress = XLSX.utils.encode_cell({r: rowIndex, c: colIndex});
                 const cell = worksheet[cellAddress];
-                cell.s = await this.customStyle(12, false)
+                if (cell) {
+                    cell.s = {
+                        alignment: {horizontal: 'center', vertical: 'center', wrapText: true},
+                        font: {cz: 12}
+                    }
+                }
             }
-
         }
 
-        const header = ['A1', 'B1', 'C1', 'D1'];
+        const header = ['B3', 'C3', 'D3'];
         for (let j = 0; j < header.length; j++) {
-            worksheet[header[j]].s = await this.customStyle(14, true)
+            worksheet[header[j]].s = {
+                alignment: {horizontal: 'center', vertical: 'center',},
+                font: {cz: 12, bold: true}
+            }
         }
 
-        worksheet['!cols'] = [{wch: 12}, {wch: 13}, {wch: 40}, {wch: 10}, {hidden: true}];
+        worksheet['!cols'] = [{wch: 8}, {wch: 12}, {wch: 40}, {wch: 8}, {hidden: true}, {hidden: true}];
+
         const lastRow = XLSX.utils.decode_range(worksheet['!ref']).e.r;
-        const sumCell = XLSX.utils.encode_cell({r: lastRow + 1, c: 3})
-        return XLSX.utils.sheet_add_aoa(worksheet, [[sum]], {origin: sumCell});
-    }
-
-    async customStyle(size, bold) {
-        return {
-            font: {
-                size,
-                bold
-            },
-            alignment: {
-                horizontal: 'center',
-                vertical: 'center',
-                wrapText: true
-            },
+        const sumCell = XLSX.utils.encode_cell({r: lastRow + 1, c: 3});
+        XLSX.utils.sheet_add_aoa(worksheet, [[sum]], {origin: sumCell});
+        worksheet[sumCell].s = {
+            font: {bold: true, sz:13},
+            alignment: {horizontal: 'center'},
+            border: {top: true, bottom: true}
         }
+
+        const total = XLSX.utils.encode_cell({r: lastRow + 1, c: 2})
+        XLSX.utils.sheet_add_aoa(worksheet, [['Total']], {origin: total});
+        worksheet[total].s = {font: {bold: true,sz:13}, alignment: {horizontal: 'right'}}
+
+        XLSX.utils.sheet_add_aoa(worksheet, [['Project']], {origin: 'B1'});
+        XLSX.utils.sheet_add_aoa(worksheet, [[project]], {origin: 'C1'});
+        XLSX.utils.sheet_add_aoa(worksheet, [['Developer']], {origin: 'B2'});
+        XLSX.utils.sheet_add_aoa(worksheet, [[fullName]], {origin: 'C2'});
+
+
+        const title = ['B1', 'C1'];
+        for (let j = 0; j < title.length; j++) {
+            worksheet[title[j]].s = {font: {bold: true, sz: 14}, alignment: {horizontal: 'left'}}
+        }
+
+        const title2 = ['B2','C2'];
+        for (let j = 0; j < title2.length; j++) {
+            worksheet[title2[j]].s = {
+                font: {bold: true, sz: 14},
+                alignment: {horizontal: 'left'},
+                border: {bottom: true}
+            }
+        }
+
+        return worksheet;
     }
 }
