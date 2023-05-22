@@ -13,8 +13,7 @@ export class UploadController {
         try {
             const extension = req.headers.authorization;
             const newFile = await this.xlsService.parseFile(file.buffer, extension);
-            const type = newFile.path.slice(-3) as string;
-            return new StreamableFile(newFile, {type});
+            return new StreamableFile(newFile);
         }catch (e) {
             console.log(e)
         }

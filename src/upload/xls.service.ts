@@ -16,6 +16,10 @@ export class XlsService {
         const users = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
 
         const filterUsersFields = users.map((obj: any) => {
+            const millisecondsPerDay = 24 * 60 * 60 * 1000;
+            const unixTime = (obj['Work date'] - 25569) * millisecondsPerDay;
+            obj['Work date'] = new Date(unixTime).toLocaleString().slice(0, -12)
+                .replace(',', '').replace(/\//g, '.');
             const {
                 'Work date': workDate,
                 'Work Description': workDescription,
@@ -23,10 +27,6 @@ export class XlsService {
                 'Full name': fullName,
                 'Activity Name': customer
             } = obj;
-            const millisecondsPerDay = 24 * 60 * 60 * 1000;
-            const unixTime = (obj['Work date'] - 25569) * millisecondsPerDay;
-            obj['Work date'] = new Date(unixTime).toLocaleString().slice(0, -12)
-                .replace(',', '').replace(/\//g, '.');
             return {
                 'Work date': workDate,
                 'Work Description': workDescription, 'Hours': hours, 'Full name': fullName, 'Activity Name': customer
@@ -53,8 +53,15 @@ export class XlsService {
 
         for (let i = 0; i < data.length; i++) {
             const sum = data[i].reduce((acc, {Hours}) => acc + Hours, 0);
+            const modifyHours = data[i].map(row => {
+                return {
+                    ['Work date'] : row['Work date'],
+                    ['Work Description'] : row['Work Description'],
+                    ['Hours'] : String(row['Hours']).substring(0,3),
+                };
+            });
             // @ts-ignore
-            const worksheet = XLSX.utils.json_to_sheet(data[i], {origin: 'B3'});
+            const worksheet = XLSX.utils.json_to_sheet(modifyHours, {origin: 'B3'});
 
             const fullName = data[i][0]['Full name'].replace(/\[X\]/g, '');
             const project = data[i][0]['Activity Name'];
@@ -86,7 +93,7 @@ export class XlsService {
         for (let j = 0; j < header.length; j++) {
             worksheet[header[j]].s = {
                 alignment: {horizontal: 'center', vertical: 'center',},
-                font: {cz: 12, bold: true}
+                font: {cz: 12, bold: true}, border: {top: true}
             }
         }
 
@@ -121,7 +128,6 @@ export class XlsService {
             worksheet[title2[j]].s = {
                 font: {bold: true, sz: 14},
                 alignment: {horizontal: 'left'},
-                border: {bottom: true}
             }
         }
         return worksheet;
