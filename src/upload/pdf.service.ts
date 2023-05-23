@@ -21,26 +21,26 @@ export class PdfService {
                 };
             });
 
-            doc.setFontSize(12).setFont('Helvetica', 'bold').text(`Project -  ${data[i][0]['Activity Name']}`, 50, 20);
-            doc.text(`Developer -  ${data[i][0]['Full name']}`, 50, 25);
+            doc.setFontSize(12).setFont('Helvetica', 'bold').text(`Project        ${data[i][0]['Activity Name']}`, 48, 20);
+            doc.text(`Developer   ${data[i][0]['Full name']}`, 48, 25);
 
             autoTable(doc, {
                 theme: 'plain',
                 head: [headers],
-                headStyles: {halign: 'center',fontSize: 11},
+                headStyles: {halign: 'left',fontSize: 11},
                 columnStyles: {
-                    0: {halign: 'center', cellWidth: 25, valign: 'middle', fontSize: 11},
-                    1: {halign: 'center', cellWidth: 60, valign: 'middle', fontSize: 11},
+                    0: {halign: 'left', cellWidth: 25, valign: 'middle', fontSize: 11},
+                    1: {halign: 'left', cellWidth: 60, valign: 'middle', fontSize: 11},
                     2: {halign: 'center', cellWidth: 20, valign: 'middle', fontSize: 11}
                 },
                 body: modifyHours.map((row) => Object.values(row).slice(0, 3)),
                 margin: {left: 46, top: 28},
-                foot: [['','',`Total ${sum}`]],
+                foot: [['','                                            Total',`${sum}`]],
                 footStyles: {fontSize: 11,halign: 'center'},
                 showFoot: "lastPage",
                 didDrawPage: () => {
                     doc.setLineWidth(0.5);
-                    doc.line(49, 34, doc.internal.pageSize.getWidth() - 60, 34);
+                    doc.line(48, 34, doc.internal.pageSize.getWidth() - 60, 34);
                 },
             })
             doc.addPage();

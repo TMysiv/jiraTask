@@ -63,7 +63,7 @@ export class XlsService {
             // @ts-ignore
             const worksheet = XLSX.utils.json_to_sheet(modifyHours, {origin: 'B3'});
 
-            const fullName = data[i][0]['Full name'].replace(/\[X\]/g, '');
+            const fullName = data[i][0]['Full name'];
             const project = data[i][0]['Activity Name'];
             const styledWorkSheet = await this.addStyles(worksheet, sum, fullName, project);
 
@@ -81,20 +81,31 @@ export class XlsService {
                 const cellAddress = XLSX.utils.encode_cell({r: rowIndex, c: colIndex});
                 const cell = worksheet[cellAddress];
                 if (cell) {
-                    cell.s = {
-                        alignment: {horizontal: 'center', vertical: 'center', wrapText: true},
-                        font: {cz: 12}
+                    if (cellAddress.includes('D')){
+                        cell.s = {
+                            alignment: {horizontal: 'center', vertical: 'center', wrapText: true},
+                            font: {cz: 12}
+                        }
+                    }else {
+                        cell.s = {
+                            alignment: {horizontal: 'left', vertical: 'center', wrapText: true},
+                            font: {cz: 12}
+                        }
                     }
                 }
             }
         }
 
-        const header = ['B3', 'C3', 'D3'];
+        const header = ['B3', 'C3'];
         for (let j = 0; j < header.length; j++) {
             worksheet[header[j]].s = {
-                alignment: {horizontal: 'center', vertical: 'center',},
+                alignment: {horizontal: 'left', vertical: 'center',},
                 font: {cz: 12, bold: true}, border: {top: true}
             }
+        }
+        worksheet['D3'].s = {
+            alignment: {horizontal: 'center', vertical: 'center',},
+            font: {cz: 12, bold: true}, border: {top: true}
         }
 
         worksheet['!cols'] = [{wch: 8}, {wch: 12}, {wch: 40}, {wch: 8}, {hidden: true}, {hidden: true}];
