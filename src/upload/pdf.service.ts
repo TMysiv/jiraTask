@@ -1,5 +1,4 @@
 import {Injectable} from "@nestjs/common";
-import * as PDFDocument from 'pdfkit';
 import * as fs from "fs";
 import {join} from "path";
 import JsPDF from 'jspdf'
@@ -49,7 +48,7 @@ export class PdfService {
         }
         const fileName = new Date().getTime();
         doc.save(`files/${fileName}.pdf`)
-        return fs.createReadStream(join(process.cwd(), 'files' ,'table.pdf'));
+        return fs.createReadStream(join(process.cwd(), 'files' ,`${fileName}.pdf`));
     }
 
 }
